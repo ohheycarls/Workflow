@@ -1,0 +1,46 @@
+# check if weekend
+
+import com.cardiff.bpm.assignment.*;   
+import com.cardiff.bpm.attachment.*;
+import com.cardiff.bpm.engine.*;
+import com.cardiff.bpm.engine.event.*;
+import com.cardiff.bpm.engine.management.*;
+import com.cardiff.bpm.engine.tasks.*;
+import com.cardiff.bpm.engine.tasks.impl.*;
+import com.cardiff.bpm.form.*;
+import com.cardiff.bpm.user.*;
+import com.cardiff.bpm.util.*;
+import java.sql.*;
+import java.util.*;
+import java.lang.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.FileUtils.*;
+import java.util.List;
+import java.util.EnumSet;
+import java.lang.Object.*;
+ 
+void enteredActive(State state){
+                Log log = LogFactory.getLog();
+                Calendar myDate = Calendar.getInstance(); // set this up however you need it.
+                int dow = myDate.get (Calendar.DAY_OF_WEEK);
+                log.info("Day of week = " + dow);
+                boolean isWeekday = ((dow >= Calendar.MONDAY) && (dow <= Calendar.FRIDAY));
+                if(isWeekday == true){
+                                thisProcess.setFieldValue("isWeekday","1");
+                                log.info("Today is a weekday");
+                }
+                else{
+                                thisProcess.setFieldValue("isWeekday","0");
+                }
+ 
+                String type = thisProcess.getFieldValue("Request");
+                log.info("Loop Request = " + type);
+ 
+}
