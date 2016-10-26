@@ -1,0 +1,116 @@
+//-----------------------------------------------
+// writeEeAppToQueue
+// Write all necessary data Database
+//-----------------------------------------------
+writeEeAppToQueue() {
+ 
+ 
+    Log log = LogFactory.getLog();
+ 
+    Connection con = thisConnectAgentManager.newConnection("UW");
+    var TABLE_NAME = "UW_EEApps";
+    Statement st = null;       
+    String process_counter = "";
+                String batch = thisProcess.getFieldValue("CSID");
+                batchsplit = batch.split(" ");
+                QuoteNumber = batchsplit[0];
+                String GroupName = "";
+                String EffectiveDate = "";
+                //String QuoteNumber = thisProcess.getFieldValue("BatchID");
+                //String GroupName = thisProcess.getFieldValue("GroupName");
+                //String EffectiveDate = thisProcess.getFieldValue("EffectiveDate");
+                String EENum = thisProcess.getFieldValue("EENum");
+                holdTask = thisProcess.getTaskByName("UW Employee Application Hold");
+                tId =  holdTask.getEventId();
+                pId = thisProcess.getId();
+ 
+    try {
+ 
+                String process_counter = "";
+ 
+                //Create SQL Command to get current OID counter.
+                st = con.createStatement();
+                String sql = "Select eeNum from UW_EEApps where QuoteNumber = '" + QuoteNumber + "' ORDER BY SeqNum asc ";
+                //log.info("setEENum::" + sql);
+ 
+                //Execute SQL
+                rs = st.executeQuery(sql);
+                //log.info("setEENum::get result set");
+                //Harvest results
+                currRow = 0;
+                process_counter = "0";
+                while(rs.next()) {
+                                  process_counter = rs.getString("eeNum");
+                                  //log.info("setEENum::rs.next");
+                                  currRow++;
+                }
+ 
+                //log.info("Last eenum = " + process_counter);
+ 
+                //Increment the OID counter
+                int p_count = Integer.parseInt(process_counter);
+                p_count = p_count + 1;
+                eenum = p_count;
+                //log.info("New eenum = " + eenum);
+ 
+                /*Capture data to be saved
+                if(!EENum.equals("") && !EENum.equals(null))// && !EENum.equals(void))
+                {
+                                eNum = Integer.parseInt(EENum);
+                                eNum = eNum + 1;
+                                eenum = eNum.toString();
+                                thisProcess.setFieldValue("EENum", eenum);
+                 }
+                 else
+                 {
+                                eenum = "1";
+                                thisProcess.setFieldValue("EENum",eenum);
+                 }*/
+ 
+                 String insertFields = "QuoteNumber," +
+                                       "GroupName," +
+                                       "EffectiveDate," +
+                                       "tId," +
+                                       "eeNum, " +
+                                       "processID, " +
+                                       "cancel, " +
+                                       "exportReady, " +
+                                       "sentAttachment";
+ 
+                  String insertValues = "'" + QuoteNumber + "'," +
+                                        "'" + GroupName + "'," +
+                                        "'" + EffectiveDate + "'," +
+                                        "'" + tId + "'," +
+                                        "'" + eenum + "'," +
+                                        "'" + pId + "'," +
+                                        "'0'," + "'0'," + "'0'";
+ 
+                   //Create SQL Command to get current OID counter.
+                   st1 = con.createStatement();
+                   String sql = "INSERT INTO UW_EEApps " +
+                                "(" + insertFields + ") " +
+                                "VALUES " +
+                                "(" + insertValues + ") ";
+                   //log.info("writeEeAppToQueue::" + sql);
+                   //Execute Insert SQL
+                   rs1 = st1.executeUpdate(sql);
+ 
+                   //Confirm insert Successful.
+                   if( rs1 == 0 || rs1 == null )  {
+                                 log.info("writeEeAppToQueue::No records updated. Contact Support.");
+                   }
+ 
+    } catch (Exception e) {
+ 
+                   log.warn( "writeEeAppToQueue::Database action failed." + e );
+               
+    } finally {
+               
+                   if (con != null) {con.close();}
+                                if (st != null) {st.close();}
+                                if (st1 != null) {st1.close();}
+                                //log.info( "writeEeAppToQueue::Database connection closed.");
+ 
+    }
+ 
+}
