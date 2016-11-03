@@ -1,0 +1,37 @@
+getAttach(String pId,String eeId){  
+Log log = LogFactory.getLog(); 
+try {  
+//Get handles on the two processes from the process manager   
+pm = EngineFactory.getDefaultEngine().getProcessManager();  
+existingProcessId = Integer.parseInt(pId); 
+existingProcess = pm.getProcessById(existingProcessId);    
+currProcessId = Integer.parseInt(eeId);  
+currProcess = pm.getProcessById(currProcessId);  
+// get the existing processes attachment manager    
+existingAmgr = existingProcess.getAttachmentManager();   
+// get the current process attachment manager         
+amgr = currProcess.getAttachmentManager();              
+attachments = amgr.getAttachments();  
+attachmentCount = attachments.size();     
+// loop through the current process attachments   
+for (i=0; i<attachmentCount; i++) {                   
+attachment = attachments.get(i);                     
+if (attachment.getLocationType() == Attachment.LocationType.URL) {          
+//attachment.LocationType.URL) {                                
+existingAmgr.addAttachment(attachment.getTitle(), attachment.getURL(), attachment.getUser());       
+}              
+else if (attachment.getLocationType() == Attachment.LocationType.FILE) {  
+//attachment.LocationType.FILE) {               
+// check out the current process attachment      
+path = amgr.checkOut(attachment, false, attachment.getUser());        
+f = new File(path);                                      
+// add the current process attachment to the existing process attachment manager         
+existingAmgr.addAttachment(attachment.getTitle(), f, attachment.getUser());   
+}             
+}             
+existingProcess.setFieldValue("newApp","1");  
+existingProcess.setFieldValue("employeesDone","");  
+}  catch(e) {    
+log.warn("Error::getAttach::" + e);   
+}
+}
