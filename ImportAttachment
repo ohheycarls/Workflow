@@ -1,0 +1,39 @@
+//-----------------------------------------------
+//          importAttachment - CML
+//          Import attachment from the parent workflow to subworkflow
+//-----------------------------------------------
+importAttachment() {               
+Log log = LogFactory.getLog();           
+Engine eng = EngineFactory.getDefaultEngine();      
+ProcessManager pm = eng.getProcessManager();            
+parent = thisProcess.getAttribute("parentProcess");              
+parentProcessID = pm.getProcessById(parent);          
+//log.info("ParentProcessID = " + parentProcessID);     
+//currentTaskID = thisTask.getId();         
+//currProcess = pm.getProcessById(currentTaskID);    
+currentProcessID = thisProcess.getId();             
+//log.info("currentTaskID = " + currentTaskID);        
+//log.info("currentProcessID = " + currentProcessID);    
+// get the current processes attachment manager           
+AttachmentManager currentAmgr = thisProcess.getAttachmentManager();   
+// get the parent process attachment manager      
+pamgr = parentProcessID.getAttachmentManager();       
+pattachments = pamgr.getAttachments();             
+pattachmentCount = pattachments.size();              
+//log.warn("Attachment size = " + attachmentCount);    
+// loop through the current process attachments          
+for (i = 0; i < pattachmentCount; i++) {                
+attachment = pattachments.get(i);                       
+if (attachment.getLocationType() == Attachment.LocationType.URL) {     
+//attachment.LocationType.URL) {                                  
+currentAmgr.addAttachment(attachment.getTitle(), attachment.getURL(), attachment.getUser());  
+} else if (attachment.getLocationType() == Attachment.LocationType.FILE) {                   
+//attachment.LocationType.FILE) {                                       
+// check out the current process attachment           
+var path = pamgr.checkOut(attachment, false, attachment.getUser());   
+var f = new File(path);                               
+// add the current process attachment to the existing process attachment manager    
+currentAmgr.addAttachment(attachment.getTitle(), f, attachment.getUser());       
+}             
+}
+} 
