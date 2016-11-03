@@ -1,3 +1,5 @@
+# not workflow - this was UW form code
+
 function getEmpApps() 
 { 
   var table = CSForm.getTable("EmplApp");
