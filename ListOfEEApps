@@ -1,0 +1,166 @@
+function getEmpApps() 
+{ 
+  var table = CSForm.getTable("EmplApp");
+  /*for( cl=0; cl<table.getNumberOfRows(); cl++) 
+  {     
+    table.deleteRows(1,0);
+  }*/   
+  try 
+  {  
+    var con = CSDB.newConnection( "UW" );   
+    if (!con) {    
+      CSForm.setStatusMsg("getEmpApps::Unable to open database connection!");    
+      CSServer.log("getEmpApps::Unable to open database connection!");   
+      return;  
+    }                                                 
+    
+    //Retrieve necessary fields                                                
+    var quote = CSForm.getField("BatchID").getValue();      
+    var quotenum = CSForm.getField("QuoteNumber").getValue();                                                 
+    
+    if ( quote != null ){                                                                 
+      // Create query into Notes Table        
+      var sqlQuery = "SELECT [GroupName] " +   
+      ",[EffectiveDate] " +       
+      ",[SeqNum] " +          
+      ",[tId] " +          
+      ",[eeNum] " +     
+      ",[employeeDone] " +          
+      "FROM [UW].[dbo].[UW_EEApps] " +   
+      "WHERE QuoteNumber = '00" + quote + "' " +    
+      "ORDER BY SeqNum asc "; 
+      
+      var rs = con.executeSQL( sqlQuery );        
+      CSServer.log(sqlQuery);        
+      if (!rs ) {          
+        CSForm.setStatusMsg("getEmpApps::Unable to open rowset!");      
+        CSServer.log("getEmpApps::Unable to open rowset!");     
+        return;        
+      }         
+      var currRow = 0;   
+      // While there are rows in the results set add them.  
+      while (rs.nextRow()) {      
+        if(currRow != 0 ) table.addRows(1);   
+        //var seqNum = rs.getValue("SeqNum");
+        //if(seqNum.length == 1)      
+        //seqNum = "00" + seqNum;  
+        //else if(seqNum.length == 2)  
+        //seqNum = "0" + seqNum;
+        var eeNum = rs.getValue("eeNum"); 
+        if(eeNum.length == 1)       
+          eeNum = "00" + eeNum;    
+        else if(eeNum.length == 2) 
+          eeNum = "0" + eeNum;      
+        var groupName = rs.getValue("GroupName"); 
+        var tId = rs.getValue("tId");  
+        var effective = rs.getValue("EffectiveDate");   
+        var employeeDone = rs.getValue("employeeDone"); 
+        table.getAt(currRow, "SeqNum").setValue(quotenum + "." + eeNum);     
+        table.getAt(currRow, "GrpName").setValue(groupName + " - Effective: " + effective);  
+        table.getAt(currRow, "TaskID").setValue(tId);        
+        table.getAt(currRow, "employeeDone").setValue(employeeDone);    
+        //CSServer.log("TaskID of employee app = " + tId);      
+        CSServer.log(currRow + " was filled.");          
+        currRow++;        
+      } //while    
+      rs.close();      
+    } // Check of parameters   
+    if ( currRow == 0 ) {  
+      //list.insertAt( -1, 0, " | | | |No Notes Found." );  
+      table.getAt(0, "SeqNum").setValue("No Employee Applications Found.")  
+    } 
+    con.close();
+    CSServer.log("connection closed"); 
+    //getActiveProcesses();
+    return; 
+  } //close try
+  catch(e) {
+    CSServer.log( "getEmpApps::" + e );
+    if ( rs ) rs.close();
+    if ( con ) con.close(); 
+    } // catch      } 
+    
+//--------------------------------------//
+adds to DB if employee is done so// know on next open to read only view btn
+//--------------------------------------
+function emplDone(){
+  try {
+    // set the db connection
+    con = CSDB.newConnection( "UW" );
+    // if there is a problem report and leave 
+    if (!con) {   
+      CSForm.setStatusMsg("emplDone::Unable to open database connection!"); 
+      CSServer.log("emplDone::Unable to open database connection!");
+      return;  
+    }
+    //Retrieve necessary key fields
+    var csid = CSForm.getField("CSID").getValue();
+    var csidsplit = csid.split(" "); 
+    var batch = csidsplit[0];
+    var tbl  = CSForm.getTable("EmplApp"); 
+    var numRows = tbl.getNumberOfRows(); 
+    for(var i = 0; i < numRows; i++){
+      var j = parseInt(i) + 1;
+      var employeeDone = tbl.getAt(i,"employeeDone").getValue();   
+      if (employeeDone == "" || employeeDone == "null") { employeeDone = "0"; } 
+      var sqlInsert = "UPDATE [UW].[dbo].[UW_EEApps] " + 
+      "SET employeeDone = " + employeeDone + " " +
+      "WHERE QuoteNumber = '" + batch + "' " +     
+      "AND eeNum = " + j;   
+      CSServer.log(sqlInsert);   
+      //Execute the Insert  
+      var rs = con.executeUpdate( sqlInsert );  
+      if ( rs == 0 ) {       
+        //CSForm.setStatusMsg("emplDone::Unable to update employee list!");  
+        CSServer.log("emplDone::Unable to update employee list!");     
+        con.close();       
+        return;       
+      }      
+    }     
+    //Close the connections   
+    con.close();                        
+    return; 
+  } //close try
+  catch(e) { 
+    CSServer.log( "emplDone::" + e ); 
+    //if ( rs ) rs.close();   
+    if ( con ) con.close(); 
+  } // catch
+} 
+
+
+function findRemoteFax()
+{
+  try {  
+    var con = CSDB.newConnection( "TeleFormFormExport" );  
+    if (!con) {    
+      CSForm.setStatusMsg("findRemoteFax::Unable to open database connection!"); 
+      CSServer.log("findRemoteFax::Unable to open database connection!");  
+      return; 
+    }         
+    //Retrieve necessary fields        
+    var CSID = CSForm.getField("CSID").getValue();  
+    if ( CSID != null ){                              
+    // Create query into Notes Table    
+    var sqlQuery = "SELECT [Remote_Fax] " + 
+    "FROM [TeleFormFormExport].[dbo].[CC0201] " +  
+    "WHERE CSID = '" + CSID + "' ";      
+    var rs = con.executeSQL( sqlQuery ); 
+    CSServer.log(sqlQuery);              
+    // While there are rows in the results set add them.   
+    while (rs.nextRow()) {      
+      remote_fax = rs.getValue("Remote_Fax"); 
+    } //while        
+    CSForm.getField("remote_fax").setValue(remote_fax);  
+    rs.close();                                           
+    } // Check of parameters        
+    con.close();   
+    CSServer.log("connection closed");  
+    return;   
+  } //close try
+  catch(e) {   
+    CSServer.log( "findRemoteFax::" + e ); 
+    if ( rs ) rs.close();  
+    if ( con ) con.close();
+  } // catch      
+} 
