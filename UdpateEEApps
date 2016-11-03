@@ -1,0 +1,21 @@
+//-----------------------------------------------
+updateEeApp(String tId){   
+Log log = LogFactory.getLog();   
+Connection con = thisConnectAgentManager.newConnection("UW");  
+Statement st = null;           
+//holdTask = thisProcess.getTaskByName("UW Employee Application Hold");              
+//tId =  holdTask.getEventId();     
+pId = thisProcess.getId();  
+try {                    
+st = con.createStatement();                 
+String sql = "Update UW_EEApps set tId = '" + tId + "' where processID = '" + pId + "' ";       
+rs = st.executeUpdate(sql);                   
+//log.info("updateEeApp::" + sql);   
+} catch (Exception e) {      
+log.warn( "updateEeApp::Database action failed." + e );   
+} finally {        
+if (con != null) {con.close();}             
+if (st != null) {st.close();}                     
+//log.info( "updateEeApp::Database connection closed.");   
+}
+}
