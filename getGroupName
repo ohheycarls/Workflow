@@ -1,0 +1,90 @@
+getGroupName(){                
+CSID = thisProcess.getFieldValue("CSID");
+Log log = LogFactory.getLog();           
+Connection con = thisConnectAgentManager.newConnection("TeleFormFormExport"); 
+Statement st = null;          
+String gname = "";               
+try {            
+st = con.createStatement();      
+String sql = "Select company_name, company_name_02 from CC0310 where CSID = '" + CSID + "' ";    
+//log.info("getGroupName::" + sql);     
+//Execute SQL            
+rs = st.executeQuery(sql);          
+if (rs.next()) {                           
+gname = rs.getString("company_name");       
+if(gname == null){                            
+gname = rs.getString("company_name_02");       
+}                        
+thisProcess.setFieldValue("foundGName", gname);   
+}         
+} catch (Exception e) {  
+log.warn( "getGroupName::Database action failed." + e );     
+} finally {                               
+if (con != null) {con.close();}             
+//if (st != null) {st.close();}            
+//log.info( "setGroupNumUW::Database connection closed.");  
+}                
+return gname;
+}
+
+//------------------------------
+getERGroupName(){          
+Log log = LogFactory.getLog();  
+remote = "";               
+remote = getRemoteFax();        
+//remotesplit = remote.split("000");  
+//remotefax = remotesplit[0];         
+remotefax = remote.substring(0,6);    
+Connection con = thisConnectAgentManager.newConnection("TeleFormFormExport");  
+Statement st = null;            
+String gname = "";                
+try {                 
+st = con.createStatement();      
+String sql = "Select legal_company_name from CC0201 where Remote_Fax LIKE '" + remotefax + "%' ";      
+log.info("getERGroupName::" + sql);      
+//Execute SQL           
+rs = st.executeQuery(sql);   
+if (rs.next()) {              
+gname = rs.getString("legal_company_name");    
+//thisProcess.setFieldValue("foundGName", gname);     
+}           
+else {    
+gname = getGroupName();          
+}              
+} catch (Exception e) {    
+log.warn( "getERGroupName::Database action failed." + e );  
+} finally {                               
+if (con != null) {con.close();}           
+//if (st != null) {st.close();}         
+//log.info( "setGroupNumUW::Database connection closed.");  
+}               
+return gname;
+} 
+
+
+//-------------------------
+getRemoteFax(){          
+CSID = thisProcess.getFieldValue("CSID");Log log = LogFactory.getLog();      
+Connection con = thisConnectAgentManager.newConnection("TeleFormFormExport");
+Statement st = null;                  
+String gname = "";           
+remote = "";                  
+try {               
+st = con.createStatement();     
+String sql = "Select Remote_Fax from CC0310 where CSID = '" + CSID + "' ";         
+//log.info("getRemoteFax::" + sql);           
+//Execute SQL           
+rs = st.executeQuery(sql);         
+if (rs.next()) {                               
+remote = rs.getString("Remote_Fax");            
+}                 
+} catch (Exception e) {       
+log.warn( "getGroupName::Database action failed." + e ); 
+} finally {                                    
+if (con != null) {con.close();}                           
+//if (st != null) {st.close();}                           
+//log.info( "setGroupNumUW::Database connection closed."); 
+}               
+//log.info("getRemoteFax::remote = " + remote);    
+return remote;
+} 
